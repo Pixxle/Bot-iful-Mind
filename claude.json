@@ -1,0 +1,100 @@
+{
+  "project": "Bot-iful Mind",
+  "description": "A modular Telegram bot with intelligent tool routing and LLM integration",
+  "architecture": {
+    "overview": "Serverless Telegram bot deployed on Vercel with AWS backend services",
+    "stack": {
+      "language": "TypeScript",
+      "runtime": "Node.js 20",
+      "deployment": "Vercel serverless functions",
+      "database": "AWS DynamoDB",
+      "infrastructure": "Terraform",
+      "ci_cd": "GitHub Actions"
+    },
+    "key_components": {
+      "telegram_webhook": "Handles incoming messages via Vercel API routes",
+      "llm_router": "Determines whether to use tools or provide direct responses",
+      "tool_system": "Modular plugin architecture for extensible functionality",
+      "rate_limiter": "DynamoDB-based per-user daily message limits",
+      "voice_processor": "Transcribes voice messages using OpenAI Whisper"
+    }
+  },
+  "directory_structure": {
+    "src/bot": "Telegram bot handlers and message processing",
+    "src/llm": "LLM client and tool routing logic",
+    "src/tools": "Tool implementations with base class and examples",
+    "src/db": "DynamoDB client and rate limiting",
+    "src/types": "TypeScript type definitions",
+    "api/": "Vercel serverless function entry points",
+    "terraform/": "AWS infrastructure configuration",
+    ".github/workflows": "CI/CD pipelines"
+  },
+  "key_files": {
+    "api/webhook.ts": "Main webhook handler for Telegram updates",
+    "src/bot/telegram.ts": "Core bot logic and message routing",
+    "src/tools/base.ts": "Base class for creating new tools",
+    "src/llm/toolRouter.ts": "Intelligent routing between tools and direct responses",
+    "terraform/main.tf": "AWS infrastructure definitions"
+  },
+  "development_workflow": {
+    "local_setup": [
+      "Copy .env.example to .env and configure",
+      "Run docker-compose up for local DynamoDB",
+      "Execute npm run setup to initialize database",
+      "Use npm run dev for local development with ngrok"
+    ],
+    "adding_tools": [
+      "Create new class extending BaseTool in src/tools/examples/",
+      "Implement name, description, and execute methods",
+      "Register tool in src/tools/index.ts",
+      "Tool will automatically be available to LLM router"
+    ],
+    "testing": [
+      "npm test - Run Jest test suite",
+      "npm run lint - Check code style",
+      "npm run typecheck - Verify TypeScript types"
+    ]
+  },
+  "deployment": {
+    "infrastructure": "terraform apply in terraform/ directory",
+    "application": "vercel command or git push to main branch",
+    "webhook_setup": "Set Telegram webhook to Vercel deployment URL"
+  },
+  "environment_variables": {
+    "required": [
+      "TELEGRAM_BOT_TOKEN",
+      "OPENAI_API_KEY",
+      "AWS_REGION",
+      "DYNAMODB_TABLE_NAME",
+      "WEBHOOK_URL"
+    ],
+    "optional": [
+      "DEFAULT_DAILY_MESSAGE_LIMIT",
+      "WEATHER_API_KEY",
+      "SEARCH_API_KEY"
+    ]
+  },
+  "commands": {
+    "dev": "Start local development server with ngrok tunnel",
+    "build": "Compile TypeScript to JavaScript",
+    "test": "Run Jest test suite",
+    "lint": "Check code with ESLint",
+    "typecheck": "Verify TypeScript types without emitting",
+    "format": "Format code with Prettier"
+  },
+  "tool_development_guide": {
+    "base_class": "Extend BaseTool from src/tools/base.ts",
+    "required_properties": ["name", "description"],
+    "required_methods": ["execute(input: ToolInput): Promise<ToolOutput>"],
+    "helpers": [
+      "validateParameters() - Validate input with Zod schema",
+      "createSuccessResponse() - Format successful responses",
+      "createErrorResponse() - Format error responses"
+    ]
+  },
+  "rate_limiting": {
+    "default_limit": "10 messages per day per user",
+    "reset_time": "Midnight UTC",
+    "storage": "DynamoDB with TTL for automatic cleanup"
+  }
+}
