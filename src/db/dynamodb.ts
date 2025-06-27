@@ -12,16 +12,47 @@ export class DynamoDBService {
   private tableName: string;
 
   constructor() {
-    const client = new DynamoDBClient({
-      region: process.env.AWS_REGION || 'us-east-1',
-      ...(process.env.NODE_ENV === 'development' && {
+    const logger = requestContext.getLogger();
+    const region = process.env.AWS_REGION || 'us-east-1';
+    
+    // Determine configuration based on environment
+    let clientConfig: any = { region };
+    let credentialMethod = 'default-chain';
+    
+    if (process.env.NODE_ENV === 'development') {
+      // Local development - use local DynamoDB
+      clientConfig = {
+        ...clientConfig,
         endpoint: 'http://localhost:8000',
         credentials: {
           accessKeyId: 'dummy',
           secretAccessKey: 'dummy',
         },
-      }),
+      };
+      credentialMethod = 'local-dummy';
+    } else if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      // Explicit credentials from environment variables (Vercel)
+      clientConfig = {
+        ...clientConfig,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+      };
+      credentialMethod = 'env-variables';
+    }
+    // Otherwise, use default AWS credential chain
+    
+    logger.info('Initializing DynamoDB client', {
+      component: 'Database',
+      operation: 'init',
+      region,
+      credentialMethod,
+      isLocal: process.env.NODE_ENV === 'development',
+      hasExplicitCredentials: !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
     });
+
+    const client = new DynamoDBClient(clientConfig);
 
     this.docClient = DynamoDBDocumentClient.from(client);
     this.tableName = process.env.DYNAMODB_TABLE_NAME || 'bot-iful-mind-rate-limits';
