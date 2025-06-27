@@ -13,6 +13,13 @@ export class DynamoDBService {
   constructor() {
     const client = new DynamoDBClient({
       region: process.env.AWS_REGION || 'us-east-1',
+      ...(process.env.NODE_ENV === 'development' && {
+        endpoint: 'http://localhost:8000',
+        credentials: {
+          accessKeyId: 'dummy',
+          secretAccessKey: 'dummy',
+        },
+      }),
     });
 
     this.docClient = DynamoDBDocumentClient.from(client);

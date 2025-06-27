@@ -52,7 +52,7 @@ bot.on('message', async (ctx) => {
     }
 
     await ctx.reply(response);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error handling message:', error);
     await ctx.reply('Sorry, an error occurred while processing your message.');
   }
@@ -68,7 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     } else {
       res.status(200).json({ status: 'Bot is running' });
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Webhook error:', error);
     res.status(500).send('Internal Server Error');
   }

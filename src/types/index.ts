@@ -1,5 +1,6 @@
 import { Context } from 'telegraf';
 import { Update } from 'telegraf/types';
+import { z } from 'zod';
 
 export interface BotContext extends Context<Update> {
   userId?: string;
@@ -10,6 +11,7 @@ export interface Tool {
   name: string;
   description: string;
   execute: (input: ToolInput) => Promise<ToolOutput>;
+  getParametersSchema?: () => z.ZodSchema | undefined;
 }
 
 export interface ToolInput {

@@ -36,24 +36,45 @@ export class LLMClient {
 
   async analyzeForToolUse(
     message: string,
-    availableTools: Array<{ name: string; description: string }>
+    availableTools: Array<{ name: string; description: string; parameters?: any }>
   ): Promise<LLMResponse> {
+    const toolDescriptions = availableTools
+      .map((t) => {
+        let desc = `- ${t.name}: ${t.description}`;
+        if (t.parameters) {
+          desc += `\n  Parameters: ${JSON.stringify(t.parameters)}`;
+        }
+        return desc;
+      })
+      .join('\n');
+
     const systemPrompt = `You are a tool router for a Telegram bot. Analyze the user's message and determine if any of the available tools should be used to answer their query.
 
 Available tools:
-${availableTools.map((t) => `- ${t.name}: ${t.description}`).join('\n')}
+${toolDescriptions}
+
+IMPORTANT: 
+- For weather tool, you MUST extract the location from the user's message and include it in toolParameters
+- If the user asks about weather but doesn't specify a location, ask them to provide one
+- For butcher tool, use it when users ask about Jim Butcher's book progress, latest book, or writing status
+- Extract all required parameters from the user's message
 
 Respond in JSON format:
 {
   "shouldUseTool": boolean,
   "toolName": "tool name if applicable",
-  "toolParameters": { ... },
+  "toolParameters": { "location": "extracted location", "units": "metric" },
   "response": "direct response if no tool is needed"
 }`;
 
     try {
       const response = await this.complete(message, systemPrompt);
-      return JSON.parse(response) as LLMResponse;
+      // Clean response by removing markdown code blocks
+      const cleanedResponse = response
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      return JSON.parse(cleanedResponse) as LLMResponse;
     } catch (error) {
       console.error('Error analyzing for tool use:', error);
       return {

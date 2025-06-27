@@ -1,5 +1,4 @@
 import { config } from 'dotenv';
-import * as ngrok from 'ngrok';
 import axios from 'axios';
 import { TelegramBot } from '../src/bot/telegram';
 
@@ -7,7 +6,6 @@ config();
 
 async function setupDevelopment(): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const port = process.env.PORT || 3000;
 
   if (!token) {
     throw new Error('TELEGRAM_BOT_TOKEN is required');
@@ -15,10 +13,16 @@ async function setupDevelopment(): Promise<void> {
 
   console.log('Starting local development environment...');
 
-  const url = await ngrok.connect({
-    port: Number(port),
-    proto: 'http',
-  });
+  // Get tunnel URL from running ngrok instance
+  const response = await axios.get('http://127.0.0.1:4040/api/tunnels');
+  const tunnels = response.data.tunnels;
+  const httpTunnel = tunnels.find((t: any) => t.proto === 'https');
+
+  if (!httpTunnel) {
+    throw new Error('No HTTPS tunnel found. Make sure ngrok is running with: ngrok http 3000');
+  }
+
+  const url = httpTunnel.public_url;
 
   console.log(`ngrok tunnel created: ${url}`);
 
@@ -42,7 +46,6 @@ async function setupDevelopment(): Promise<void> {
   process.once('SIGINT', () => {
     console.log('Shutting down...');
     bot.stop();
-    void ngrok.kill();
     process.exit(0);
   });
 

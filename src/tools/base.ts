@@ -9,6 +9,10 @@ export abstract class BaseTool implements Tool {
 
   abstract execute(input: ToolInput): Promise<ToolOutput>;
 
+  getParametersSchema(): z.ZodSchema | undefined {
+    return this.parametersSchema;
+  }
+
   protected validateParameters(parameters: unknown): void {
     if (this.parametersSchema) {
       this.parametersSchema.parse(parameters);
