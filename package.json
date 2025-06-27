@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "tsx scripts/dev.ts",
     "setup": "tsx scripts/setup.ts",
+    "set-webhook": "tsx scripts/set-webhook.ts",
+    "clear-webhook": "tsx scripts/clear-webhook.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",
