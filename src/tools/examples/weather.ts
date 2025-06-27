@@ -61,7 +61,7 @@ export class WeatherTool extends BaseTool {
         return this.createErrorResponse('Location not found');
       }
 
-      console.error('Weather tool error:', error);
+      // Error logging is handled by the base tool class
       return this.createErrorResponse('Failed to fetch weather data');
     }
   }

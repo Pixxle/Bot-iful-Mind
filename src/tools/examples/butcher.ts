@@ -68,7 +68,7 @@ export class ButcherTool extends BaseTool {
         }
       }
 
-      console.error('Butcher tool error:', error);
+      // Error logging is handled by the base tool class
       return this.createErrorResponse('Failed to fetch book progress from Jim Butcher\'s website');
     }
   }

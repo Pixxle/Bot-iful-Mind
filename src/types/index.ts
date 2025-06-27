@@ -11,6 +11,7 @@ export interface Tool {
   name: string;
   description: string;
   execute: (input: ToolInput) => Promise<ToolOutput>;
+  executeWithLogging?: (input: ToolInput) => Promise<ToolOutput>;
   getParametersSchema?: () => z.ZodSchema | undefined;
 }
 

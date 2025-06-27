@@ -5,6 +5,7 @@ import {
   PutCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { requestContext } from '../utils/requestContext';
 
 export class DynamoDBService {
   private docClient: DynamoDBDocumentClient;
@@ -27,6 +28,16 @@ export class DynamoDBService {
   }
 
   async getItem(userId: string): Promise<Record<string, unknown> | null> {
+    const logger = requestContext.getLogger();
+    const startTime = Date.now();
+    
+    logger.info('DynamoDB get operation started', {
+      component: 'Database',
+      operation: 'get_start',
+      table: this.tableName,
+      userId
+    });
+
     try {
       const command = new GetCommand({
         TableName: this.tableName,
@@ -34,14 +45,45 @@ export class DynamoDBService {
       });
 
       const response = await this.docClient.send(command);
+      const duration = Date.now() - startTime;
+      const found = !!response.Item;
+      
+      logger.logDatabaseOperation('get', this.tableName, duration, true, {
+        userId,
+        found,
+        itemSize: response.Item ? JSON.stringify(response.Item).length : 0
+      });
+
       return response.Item || null;
     } catch (error) {
-      console.error('Error getting item from DynamoDB:', error);
+      const duration = Date.now() - startTime;
+      logger.logDatabaseOperation('get', this.tableName, duration, false, {
+        userId,
+        error: (error as Error).message
+      });
+      
+      logger.error('Error getting item from DynamoDB', error as Error, {
+        component: 'Database',
+        operation: 'get_error',
+        table: this.tableName,
+        userId,
+        duration
+      });
       throw error;
     }
   }
 
   async putItem(item: Record<string, unknown>): Promise<void> {
+    const logger = requestContext.getLogger();
+    const startTime = Date.now();
+    
+    logger.info('DynamoDB put operation started', {
+      component: 'Database',
+      operation: 'put_start',
+      table: this.tableName,
+      itemSize: JSON.stringify(item).length
+    });
+
     try {
       const command = new PutCommand({
         TableName: this.tableName,
@@ -49,8 +91,24 @@ export class DynamoDBService {
       });
 
       await this.docClient.send(command);
+      const duration = Date.now() - startTime;
+      
+      logger.logDatabaseOperation('put', this.tableName, duration, true, {
+        itemSize: JSON.stringify(item).length
+      });
     } catch (error) {
-      console.error('Error putting item to DynamoDB:', error);
+      const duration = Date.now() - startTime;
+      logger.logDatabaseOperation('put', this.tableName, duration, false, {
+        error: (error as Error).message,
+        itemSize: JSON.stringify(item).length
+      });
+      
+      logger.error('Error putting item to DynamoDB', error as Error, {
+        component: 'Database',
+        operation: 'put_error',
+        table: this.tableName,
+        duration
+      });
       throw error;
     }
   }
@@ -60,6 +118,18 @@ export class DynamoDBService {
     updateExpression: string,
     expressionAttributeValues: Record<string, unknown>
   ): Promise<void> {
+    const logger = requestContext.getLogger();
+    const startTime = Date.now();
+    
+    logger.info('DynamoDB update operation started', {
+      component: 'Database',
+      operation: 'update_start',
+      table: this.tableName,
+      userId,
+      updateExpression,
+      attributeCount: Object.keys(expressionAttributeValues).length
+    });
+
     try {
       const command = new UpdateCommand({
         TableName: this.tableName,
@@ -69,8 +139,28 @@ export class DynamoDBService {
       });
 
       await this.docClient.send(command);
+      const duration = Date.now() - startTime;
+      
+      logger.logDatabaseOperation('update', this.tableName, duration, true, {
+        userId,
+        updateExpression,
+        attributeCount: Object.keys(expressionAttributeValues).length
+      });
     } catch (error) {
-      console.error('Error updating item in DynamoDB:', error);
+      const duration = Date.now() - startTime;
+      logger.logDatabaseOperation('update', this.tableName, duration, false, {
+        userId,
+        error: (error as Error).message,
+        updateExpression
+      });
+      
+      logger.error('Error updating item in DynamoDB', error as Error, {
+        component: 'Database',
+        operation: 'update_error',
+        table: this.tableName,
+        userId,
+        duration
+      });
       throw error;
     }
   }

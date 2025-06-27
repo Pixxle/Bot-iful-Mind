@@ -62,7 +62,7 @@ export class SearchTool extends BaseTool {
 
       return this.createSuccessResponse({ results });
     } catch (error) {
-      console.error('Search tool error:', error);
+      // Error logging is handled by the base tool class
       return this.createErrorResponse('Failed to perform search');
     }
   }

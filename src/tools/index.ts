@@ -2,6 +2,7 @@ import { Tool } from '../types';
 import { WeatherTool } from './examples/weather';
 import { SearchTool } from './examples/search';
 import { ButcherTool } from './examples/butcher';
+import { logger } from '../utils/logger';
 
 export class ToolRegistry {
   private tools: Map<string, Tool> = new Map();
@@ -18,7 +19,12 @@ export class ToolRegistry {
 
   register(tool: Tool): void {
     this.tools.set(tool.name.toLowerCase(), tool);
-    console.log(`Registered tool: ${tool.name}`);
+    logger.info('Tool registered', {
+      component: 'ToolRegistry',
+      operation: 'register',
+      toolName: tool.name,
+      description: tool.description
+    });
   }
 
   get(name: string): Tool | undefined {

@@ -1,5 +1,6 @@
 import { DynamoDBService } from './dynamodb';
 import { RateLimitEntry } from '../types';
+import { requestContext } from '../utils/requestContext';
 
 export class RateLimiter {
   private dynamoDB: DynamoDBService;
@@ -11,25 +12,75 @@ export class RateLimiter {
   }
 
   async checkAndIncrement(userId: string): Promise<boolean> {
+    const logger = requestContext.getLogger();
+    
+    logger.info('Rate limit check started', {
+      component: 'RateLimit',
+      operation: 'check_start',
+      userId
+    });
+
     try {
+      // Admin bypass
       if (userId === '203907755') {
+        logger.info('Admin user bypassing rate limit', {
+          component: 'RateLimit',
+          operation: 'admin_bypass',
+          userId
+        });
         return true;
       }
+
       const entry = await this.getOrCreateEntry(userId);
 
       if (this.shouldReset(entry.resetTime)) {
+        logger.info('Rate limit reset triggered', {
+          component: 'RateLimit',
+          operation: 'reset',
+          userId,
+          previousCount: entry.messageCount,
+          resetTime: entry.resetTime
+        });
         await this.resetUserCount(userId);
+        logger.logRateLimit(userId, entry.dailyLimit - 1, this.getNextResetTime());
         return true;
       }
 
+      const remaining = entry.dailyLimit - entry.messageCount;
+      
       if (entry.messageCount >= entry.dailyLimit) {
+        logger.warn('Rate limit exceeded', {
+          component: 'RateLimit',
+          operation: 'limit_exceeded',
+          userId,
+          messageCount: entry.messageCount,
+          dailyLimit: entry.dailyLimit,
+          resetTime: entry.resetTime
+        });
+        logger.logRateLimit(userId, 0, entry.resetTime);
         return false;
       }
 
       await this.incrementCount(userId);
+      logger.logRateLimit(userId, remaining - 1, entry.resetTime);
+      
+      logger.info('Rate limit check passed', {
+        component: 'RateLimit',
+        operation: 'check_passed',
+        userId,
+        newCount: entry.messageCount + 1,
+        remaining: remaining - 1,
+        dailyLimit: entry.dailyLimit
+      });
+
       return true;
     } catch (error) {
-      console.error('Error in rate limiting:', error);
+      logger.error('Error in rate limiting', error as Error, {
+        component: 'RateLimit',
+        operation: 'check_error',
+        userId
+      });
+      // Fail open - allow request when rate limiting fails
       return true;
     }
   }
