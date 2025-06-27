@@ -8,7 +8,6 @@
       "runtime": "Node.js 20",
       "deployment": "Vercel serverless functions",
       "database": "AWS DynamoDB",
-      "infrastructure": "Terraform",
       "ci_cd": "GitHub Actions"
     },
     "key_components": {
@@ -26,15 +25,13 @@
     "src/db": "DynamoDB client and rate limiting",
     "src/types": "TypeScript type definitions",
     "api/": "Vercel serverless function entry points",
-    "terraform/": "AWS infrastructure configuration",
     ".github/workflows": "CI/CD pipelines"
   },
   "key_files": {
     "api/webhook.ts": "Main webhook handler for Telegram updates",
     "src/bot/telegram.ts": "Core bot logic and message routing",
     "src/tools/base.ts": "Base class for creating new tools",
-    "src/llm/toolRouter.ts": "Intelligent routing between tools and direct responses",
-    "terraform/main.tf": "AWS infrastructure definitions"
+    "src/llm/toolRouter.ts": "Intelligent routing between tools and direct responses"
   },
   "development_workflow": {
     "local_setup": [
@@ -56,7 +53,6 @@
     ]
   },
   "deployment": {
-    "infrastructure": "terraform apply in terraform/ directory",
     "application": "vercel command or git push to main branch",
     "webhook_setup": "Set Telegram webhook to Vercel deployment URL"
   },
@@ -68,11 +64,7 @@
       "DYNAMODB_TABLE_NAME",
       "WEBHOOK_URL"
     ],
-    "optional": [
-      "DEFAULT_DAILY_MESSAGE_LIMIT",
-      "WEATHER_API_KEY",
-      "SEARCH_API_KEY"
-    ]
+    "optional": ["DEFAULT_DAILY_MESSAGE_LIMIT", "WEATHER_API_KEY", "SEARCH_API_KEY"]
   },
   "commands": {
     "dev": "Start local development server with ngrok tunnel",

@@ -9,7 +9,6 @@ A modular Telegram bot with tool integration, built with TypeScript and deployed
 - 🎤 **Voice Message Support**: Transcribes voice messages using OpenAI Whisper
 - 🚦 **Rate Limiting**: DynamoDB-based per-user daily message limits
 - 🚀 **Serverless Deployment**: Runs on Vercel with AWS backend
-- 🛠️ **Infrastructure as Code**: Terraform-managed AWS resources
 - 🔄 **CI/CD Pipeline**: Automated testing and deployment with GitHub Actions
 
 ## Architecture
@@ -54,6 +53,7 @@ cp .env.example .env
 ```
 
 Edit `.env` with your credentials:
+
 - `TELEGRAM_BOT_TOKEN`: From @BotFather on Telegram
 - `OPENAI_API_KEY`: From OpenAI platform
 - AWS credentials and region
@@ -62,48 +62,39 @@ Edit `.env` with your credentials:
 ### 3. Local Development
 
 Start local DynamoDB:
+
 ```bash
 docker-compose up -d
 ```
 
 Initialize local database:
+
 ```bash
 npm run setup
 ```
 
 Run development server:
+
 ```bash
 npm run dev
 ```
 
-### 4. Deploy Infrastructure
-
-Configure AWS credentials:
-```bash
-export AWS_ACCESS_KEY_ID=your-key
-export AWS_SECRET_ACCESS_KEY=your-secret
-```
-
-Deploy infrastructure:
-```bash
-cd terraform
-terraform init
-terraform apply
-```
-
-### 5. Deploy to Vercel
+### 4. Deploy to Vercel
 
 Install Vercel CLI:
+
 ```bash
 npm i -g vercel
 ```
 
 Deploy:
+
 ```bash
 vercel
 ```
 
 Set webhook URL:
+
 ```bash
 curl -X POST https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook \
   -H "Content-Type: application/json" \
@@ -155,32 +146,35 @@ this.register(new MyTool());
 ### Testing
 
 Run tests:
+
 ```bash
 npm test
 ```
 
 Lint code:
+
 ```bash
 npm run lint
 ```
 
 Type check:
+
 ```bash
 npm run typecheck
 ```
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token | Yes |
-| `OPENAI_API_KEY` | OpenAI API key | Yes |
-| `AWS_REGION` | AWS region | Yes |
-| `DYNAMODB_TABLE_NAME` | DynamoDB table name | Yes |
-| `WEBHOOK_URL` | Vercel deployment URL | Yes |
-| `DEFAULT_DAILY_MESSAGE_LIMIT` | Daily message limit | No (default: 10) |
-| `WEATHER_API_KEY` | OpenWeatherMap API key | No |
-| `SEARCH_API_KEY` | Google Custom Search API key | No |
+| Variable                      | Description                  | Required         |
+| ----------------------------- | ---------------------------- | ---------------- |
+| `TELEGRAM_BOT_TOKEN`          | Telegram bot token           | Yes              |
+| `OPENAI_API_KEY`              | OpenAI API key               | Yes              |
+| `AWS_REGION`                  | AWS region                   | Yes              |
+| `DYNAMODB_TABLE_NAME`         | DynamoDB table name          | Yes              |
+| `WEBHOOK_URL`                 | Vercel deployment URL        | Yes              |
+| `DEFAULT_DAILY_MESSAGE_LIMIT` | Daily message limit          | No (default: 10) |
+| `WEATHER_API_KEY`             | OpenWeatherMap API key       | No               |
+| `SEARCH_API_KEY`              | Google Custom Search API key | No               |
 
 ## Deployment
 
@@ -188,10 +182,10 @@ npm run typecheck
 
 The project includes two workflows:
 
-1. **Terraform**: Manages AWS infrastructure
 2. **Deploy**: Runs tests and deploys to Vercel
 
 Required GitHub Secrets:
+
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `VERCEL_TOKEN`
@@ -211,6 +205,7 @@ Required GitHub Secrets:
 ### Bot not responding
 
 1. Check webhook status:
+
 ```bash
 curl https://api.telegram.org/bot<YOUR_TOKEN>/getWebhookInfo
 ```
@@ -221,6 +216,7 @@ curl https://api.telegram.org/bot<YOUR_TOKEN>/getWebhookInfo
 ### Rate limiting issues
 
 Check DynamoDB table in AWS Console or use local admin UI:
+
 ```
 http://localhost:8001
 ```
