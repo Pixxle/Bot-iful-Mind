@@ -31,7 +31,7 @@ export class ButcherTool extends BaseTool {
         timeout: 10000
       });
 
-      const $ = cheerio.load(response.data);
+      const $ = cheerio.load(response.data as string);
       
       // Find the progress percentage
       const progressElement = $('.wpsm_progress-value');

@@ -103,7 +103,7 @@ export class SearchTool extends BaseTool {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         const statusText = error.response?.statusText;
-        const responseData = error.response?.data;
+        const responseData = error.response?.data as unknown;
 
         logger.error('Google Custom Search API error', error, {
           component: 'SearchTool',
@@ -112,7 +112,7 @@ export class SearchTool extends BaseTool {
           status,
           statusText,
           responseData,
-          query: input.parameters?.query,
+          query: (input.parameters as SearchParameters | undefined)?.query,
           errorCode: error.code,
           errorMessage: error.message,
         });

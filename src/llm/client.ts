@@ -74,7 +74,7 @@ export class LLMClient {
 
   async analyzeForToolUse(
     message: string,
-    availableTools: Array<{ name: string; description: string; parameters?: any }>
+    availableTools: Array<{ name: string; description: string; parameters?: Record<string, unknown> }>
   ): Promise<LLMResponse> {
     const toolDescriptions = availableTools
       .map((t) => {

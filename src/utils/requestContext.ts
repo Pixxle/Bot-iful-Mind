@@ -1,5 +1,7 @@
 import { AsyncLocalStorage } from 'async_hooks';
-import { logger } from './logger';
+import { logger, ChildLogger } from './logger';
+
+type Logger = typeof logger;
 
 export interface RequestContext {
   requestId: string;
@@ -51,7 +53,7 @@ class RequestContextManager {
   }
 
   // Create a logger with current context
-  getLogger() {
+  getLogger(): Logger | ChildLogger {
     const context = this.getContext();
     if (context) {
       return logger.child({

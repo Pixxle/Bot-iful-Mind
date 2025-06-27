@@ -94,7 +94,7 @@ export class WeatherTool extends BaseTool {
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         const statusText = error.response?.statusText;
-        const responseData = error.response?.data;
+        const responseData = error.response?.data as unknown;
         
         logger.error('OpenWeatherMap API error', error, {
           component: 'WeatherTool',
@@ -103,7 +103,7 @@ export class WeatherTool extends BaseTool {
           status,
           statusText,
           responseData,
-          location: input.parameters?.location,
+          location: (input.parameters as WeatherParameters | undefined)?.location,
           errorCode: error.code,
           errorMessage: error.message
         });
@@ -113,7 +113,7 @@ export class WeatherTool extends BaseTool {
           case 401:
             return this.createErrorResponse('Invalid weather API key. Please check your configuration.');
           case 404:
-            return this.createErrorResponse(`Location "${input.parameters?.location}" not found. Please try a different city name.`);
+            return this.createErrorResponse(`Location "${(input.parameters as WeatherParameters | undefined)?.location}" not found. Please try a different city name.`);
           case 429:
             return this.createErrorResponse('Weather API rate limit exceeded. Please try again later.');
           case 500:

@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
@@ -16,7 +16,7 @@ export class DynamoDBService {
     const region = process.env.AWS_REGION || 'us-east-1';
     
     // Determine configuration based on environment
-    let clientConfig: any = { region };
+    let clientConfig: DynamoDBClientConfig = { region };
     let credentialMethod = 'default-chain';
     
     if (process.env.NODE_ENV === 'development') {

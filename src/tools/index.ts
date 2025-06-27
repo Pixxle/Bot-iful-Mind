@@ -3,6 +3,24 @@ import { WeatherTool } from './implementations/weather';
 import { SearchTool } from './implementations/search';
 import { ButcherTool } from './implementations/butcher';
 import { logger } from '../utils/logger';
+import { z } from 'zod';
+
+interface ToolDescription {
+  name: string;
+  description: string;
+  parameters?: Record<string, unknown>;
+}
+
+interface ZodSchemaDef {
+  typeName: string;
+  shape?: () => Record<string, unknown>;
+  values?: readonly string[];
+  innerType?: ZodSchemaDef;
+}
+
+interface ZodSchemaWithDef {
+  _def: ZodSchemaDef;
+}
 
 export class ToolRegistry {
   private tools: Map<string, Tool> = new Map();
@@ -35,7 +53,7 @@ export class ToolRegistry {
     return Array.from(this.tools.values());
   }
 
-  getDescriptions(): Array<{ name: string; description: string; parameters?: any }> {
+  getDescriptions(): ToolDescription[] {
     return this.getAll().map((tool) => {
       const schema = tool.getParametersSchema?.();
       return {
@@ -46,18 +64,24 @@ export class ToolRegistry {
     });
   }
 
-  private schemaToObject(schema: any): any {
-    if (schema._def?.typeName === 'ZodObject') {
-      const shape = schema._def.shape();
-      const result: any = {};
+  private schemaToObject(schema: z.ZodSchema): Record<string, unknown> | undefined {
+    const schemaWithDef = schema as unknown as ZodSchemaWithDef;
+    
+    if (schemaWithDef._def?.typeName === 'ZodObject') {
+      const shape = schemaWithDef._def.shape?.();
+      if (!shape) return undefined;
+      
+      const result: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(shape)) {
-        const fieldSchema = value as any;
-        if (fieldSchema._def?.typeName === 'ZodString') {
+        const fieldSchema = value as ZodSchemaDef;
+        if (fieldSchema.typeName === 'ZodString') {
           result[key] = 'string';
-        } else if (fieldSchema._def?.typeName === 'ZodEnum') {
-          result[key] = fieldSchema._def.values;
-        } else if (fieldSchema._def?.typeName === 'ZodOptional') {
-          result[key] = `optional ${this.schemaToObject(fieldSchema._def.innerType)}`;
+        } else if (fieldSchema.typeName === 'ZodEnum') {
+          result[key] = fieldSchema.values;
+        } else if (fieldSchema.typeName === 'ZodOptional' && fieldSchema.innerType) {
+          const innerResult = this.schemaToObject({ _def: fieldSchema.innerType } as unknown as z.ZodSchema);
+          const innerType = typeof innerResult === 'string' ? innerResult : 'unknown';
+          result[key] = `optional ${innerType}`;
         }
       }
       return result;

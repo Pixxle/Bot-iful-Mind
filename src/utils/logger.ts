@@ -8,7 +8,7 @@ export interface LogContext {
   tool?: string;
   operation?: string;
   duration?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
@@ -48,7 +48,7 @@ class Logger {
     return Logger.instance;
   }
 
-  public formatMessage(message: string, context?: LogContext): any {
+  public formatMessage(message: string, context?: LogContext): Record<string, unknown> {
     const logEntry = {
       message,
       ...context,
