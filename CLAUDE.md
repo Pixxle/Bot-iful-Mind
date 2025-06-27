@@ -135,16 +135,40 @@ The codebase emphasizes modularity, comprehensive logging, and intelligent messa
 
 The following MCP (Model Context Protocol) servers are available when working with Claude Code in this repository:
 
-### Serena (Code Analysis & Editing)
+### Serena (Code Analysis & Editing) - **PREFERRED FOR ALL CODE WORK**
 **Primary use case**: Advanced code analysis, symbol manipulation, and project understanding
 
-**Key capabilities**:
-- `find_symbol`, `find_referencing_symbols` - Symbol-based code navigation
-- `replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol` - Intelligent code editing
-- `get_symbols_overview`, `list_dir` - Project structure analysis
-- `search_for_pattern` - Pattern searching across codebase
-- `write_memory`, `read_memory` - Memory system for storing project knowledge
-- Code thinking and validation tools for quality assurance
+**Core Navigation & Discovery**:
+- `find_symbol` - Find classes, functions, methods, variables by name/path patterns
+- `find_referencing_symbols` - Find all references to a symbol (usage analysis, subclasses)
+- `get_symbols_overview` - Get high-level view of file/directory structure and symbols
+- `list_dir` - Directory listing with gitignore respect
+- `search_for_pattern` - Regex pattern search across codebase with context
+
+**Intelligent Code Editing**:
+- `replace_symbol_body` - Replace entire function/class/method body intelligently
+- `insert_after_symbol` / `insert_before_symbol` - Add code relative to symbols
+- `replace_regex` - Advanced regex-based replacements with wildcards
+- `replace_lines` / `delete_lines` / `insert_at_line` - Line-based editing
+- `create_text_file` - Create new files (use sparingly, prefer editing existing)
+
+**Project Memory & Context**:
+- `write_memory` / `read_memory` / `list_memories` - Persistent project knowledge
+- `think_about_collected_information` - Analyze gathered information
+- `think_about_task_adherence` - Verify you're on track with requirements
+- `think_about_whether_you_are_done` - Check completion status
+- `summarize_changes` - Document what was modified
+
+**Development Workflow**:
+- `execute_shell_command` - Run build, test, lint commands with output capture
+- `onboarding` / `check_onboarding_performed` - Project setup and configuration
+- `restart_language_server` - Fix language server state issues
+
+**Advanced Features**:
+- Symbol-based operations understand code structure (classes, methods, imports)
+- Automatic code relationship analysis (find all usages, inheritance)
+- Context-aware editing that preserves formatting and conventions
+- Memory system for complex multi-session work
 
 ### Context7 (Documentation & Library Reference)
 **Primary use case**: Fetching up-to-date documentation for libraries and frameworks
@@ -165,12 +189,24 @@ The following MCP (Model Context Protocol) servers are available when working wi
 
 ### When to Use Each MCP Server
 
-**Use Serena when**:
-- Analyzing code structure or finding specific symbols/functions in this bot codebase
-- Making targeted code edits that require understanding of code relationships
-- Working with the tool system (`src/tools/`) or message handling flow
-- Need to remember project-specific information across sessions
-- Understanding the LLM routing architecture or DynamoDB integration
+**Use Serena for ALL code work including**:
+- **Code Discovery**: Finding any symbol, class, function, or variable in the codebase
+- **Impact Analysis**: Understanding what code references or depends on a symbol
+- **Intelligent Refactoring**: Symbol-aware editing that preserves code relationships
+- **Architecture Understanding**: Getting high-level overviews of modules and their structure
+- **Complex Editing**: Multi-step code changes that require understanding context
+- **Tool Development**: Working with the tool system (`src/tools/`) and adding new capabilities
+- **Message Flow Analysis**: Understanding the bot's request processing pipeline
+- **Database Integration**: Working with DynamoDB service and rate limiting
+- **LLM Integration**: Modifying the OpenAI client and tool routing logic
+- **Testing & Validation**: Running lints, tests, and builds with proper error handling
+- **Project Memory**: Storing insights about architecture decisions and patterns
+- **Session Continuity**: Maintaining context across multiple development sessions
+
+**Serena vs Traditional Tools**:
+- **Use Serena**: When you need to understand code relationships, find symbols, or make intelligent edits
+- **Use Read/Edit**: Only for simple file reading or when Serena tools aren't sufficient
+- **Always prefer Serena** for any task involving code analysis, symbol manipulation, or project understanding
 
 **Use Context7 when**:
 - Need current documentation for dependencies like Telegraf, OpenAI, AWS SDK, or Winston
@@ -183,3 +219,42 @@ The following MCP (Model Context Protocol) servers are available when working wi
 - Planning multi-step debugging approaches for message flow issues
 - Designing new tool integrations that require careful consideration
 - Analyzing performance optimization strategies for the serverless architecture
+
+## Serena MCP Usage Examples
+
+### Code Discovery Workflow
+```
+1. `get_symbols_overview src/` - Get project structure overview
+2. `find_symbol ToolRouter` - Find the tool routing logic
+3. `find_referencing_symbols ToolRouter src/` - See what uses the router
+4. `search_for_pattern "error.*handling"` - Find error handling patterns
+```
+
+### Intelligent Code Editing Workflow
+```
+1. `find_symbol execute src/tools/` - Find all tool execute methods
+2. `get_symbols_overview src/tools/implementations/` - See available tools
+3. `replace_symbol_body MyTool/execute src/tools/implementations/mytool.ts` - Update logic
+4. `insert_after_symbol MyTool src/tools/implementations/mytool.ts` - Add helper method
+```
+
+### Development & Testing Workflow
+```
+1. `execute_shell_command "npm run lint"` - Check code quality
+2. `execute_shell_command "npm test"` - Run test suite
+3. `think_about_collected_information` - Analyze results
+4. `summarize_changes` - Document what was done
+```
+
+### Project Memory Usage
+```
+1. `write_memory "tool-architecture" "..." - Store architectural insights
+2. `read_memory "tool-architecture"` - Retrieve stored knowledge
+3. `list_memories` - See all available project memories
+```
+
+**Key Benefits of Using Serena**:
+- **Faster Development**: Symbol-based navigation is much faster than manual file searching
+- **Better Code Quality**: Understanding relationships prevents breaking changes
+- **Persistent Knowledge**: Memory system maintains context across sessions
+- **Integrated Workflow**: Single tool for analysis, editing, testing, and documentation
