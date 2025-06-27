@@ -22,7 +22,7 @@
   "directory_structure": {
     "src/bot": "Telegram bot handlers and message processing",
     "src/llm": "LLM client and tool routing logic",
-    "src/tools": "Tool implementations with base class and examples",
+    "src/tools": "Tool implementations with base class and concrete implementations",
     "src/db": "DynamoDB client and rate limiting",
     "src/types": "TypeScript type definitions",
     "api/": "Vercel serverless function entry points",
@@ -44,7 +44,7 @@
       "Use npm run dev for local development with ngrok"
     ],
     "adding_tools": [
-      "Create new class extending BaseTool in src/tools/examples/",
+      "Create new class extending BaseTool in src/tools/implementations/",
       "Implement name, description, and execute methods",
       "Register tool in src/tools/index.ts",
       "Tool will automatically be available to LLM router"

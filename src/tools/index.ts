@@ -1,7 +1,7 @@
 import { Tool } from '../types';
-import { WeatherTool } from './examples/weather';
-import { SearchTool } from './examples/search';
-import { ButcherTool } from './examples/butcher';
+import { WeatherTool } from './implementations/weather';
+import { SearchTool } from './implementations/search';
+import { ButcherTool } from './implementations/butcher';
 import { logger } from '../utils/logger';
 
 export class ToolRegistry {

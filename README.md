@@ -125,7 +125,7 @@ src/
 
 ### Creating a New Tool
 
-1. Create a new file in `src/tools/examples/`:
+1. Create a new file in `src/tools/implementations/`:
 
 ```typescript
 import { BaseTool } from '../base';
