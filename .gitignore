@@ -9,6 +9,11 @@ dist/
 .env.local
 .env.production
 
+# Claude
+claude.json
+.claude/
+.serena/
+
 # IDE
 .vscode/
 .idea/
