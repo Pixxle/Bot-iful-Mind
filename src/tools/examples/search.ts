@@ -25,7 +25,7 @@ export class SearchTool extends BaseTool {
   async execute(input: ToolInput): Promise<ToolOutput> {
     const logger = requestContext.getLogger();
     const startTime = Date.now();
-    
+
     try {
       const parameters = input.parameters as SearchParameters;
       this.validateParameters(parameters);
@@ -40,7 +40,7 @@ export class SearchTool extends BaseTool {
           query: parameters.query,
           limit: parameters.limit,
           hasApiKey: !!apiKey,
-          hasSearchEngineId: !!searchEngineId
+          hasSearchEngineId: !!searchEngineId,
         });
         return this.mockSearch(parameters);
       }
@@ -60,12 +60,12 @@ export class SearchTool extends BaseTool {
         query: parameters.query,
         limit: parameters.limit,
         apiKeyLength: apiKey.length,
-        searchEngineIdLength: searchEngineId.length
+        searchEngineIdLength: searchEngineId.length,
       });
 
       const response = await axios.get(url, {
         params: requestParams,
-        timeout: 10000
+        timeout: 10000,
       });
 
       interface GoogleSearchItem {
@@ -93,18 +93,18 @@ export class SearchTool extends BaseTool {
         duration,
         query: parameters.query,
         resultsCount: results.length,
-        totalResults: searchData.items?.length || 0
+        totalResults: searchData.items?.length || 0,
       });
 
       return this.createSuccessResponse({ results });
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         const statusText = error.response?.statusText;
         const responseData = error.response?.data;
-        
+
         logger.error('Google Custom Search API error', error, {
           component: 'SearchTool',
           operation: 'api_error',
@@ -114,25 +114,37 @@ export class SearchTool extends BaseTool {
           responseData,
           query: input.parameters?.query,
           errorCode: error.code,
-          errorMessage: error.message
+          errorMessage: error.message,
         });
 
         // Provide specific error messages based on status code
         switch (status) {
           case 400:
-            return this.createErrorResponse('Invalid search query. Please try a different search term.');
+            return this.createErrorResponse(
+              'Invalid search query. Please try a different search term.'
+            );
           case 401:
-            return this.createErrorResponse('Invalid search API key. Please check your configuration.');
+            return this.createErrorResponse(
+              'Invalid search API key. Please check your configuration.'
+            );
           case 403:
-            return this.createErrorResponse('Search API access forbidden. Please check your API key and permissions.');
+            return this.createErrorResponse(
+              'Search API access forbidden. Please check your API key and permissions.'
+            );
           case 429:
-            return this.createErrorResponse('Search API rate limit exceeded. Please try again later.');
+            return this.createErrorResponse(
+              'Search API rate limit exceeded. Please try again later.'
+            );
           case 500:
           case 502:
           case 503:
-            return this.createErrorResponse('Search service is temporarily unavailable. Please try again later.');
+            return this.createErrorResponse(
+              'Search service is temporarily unavailable. Please try again later.'
+            );
           default:
-            return this.createErrorResponse(`Search API error: ${statusText || 'Unknown error'} (${status || 'No status'})`);
+            return this.createErrorResponse(
+              `Search API error: ${statusText || 'Unknown error'} (${status || 'No status'})`
+            );
         }
       } else {
         // Network or other errors
@@ -140,18 +152,20 @@ export class SearchTool extends BaseTool {
           component: 'SearchTool',
           operation: 'network_error',
           duration,
-          query: input.parameters?.query
+          query: input.parameters?.query,
         });
-        
+
         if (error instanceof Error) {
           if (error.message.includes('timeout')) {
             return this.createErrorResponse('Search request timed out. Please try again.');
           }
           if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
-            return this.createErrorResponse('Unable to connect to search service. Please check your internet connection.');
+            return this.createErrorResponse(
+              'Unable to connect to search service. Please check your internet connection.'
+            );
           }
         }
-        
+
         return this.createErrorResponse('Failed to perform search due to a network error.');
       }
     }
@@ -159,12 +173,12 @@ export class SearchTool extends BaseTool {
 
   private mockSearch(parameters: SearchParameters): ToolOutput {
     const logger = requestContext.getLogger();
-    
+
     logger.info('Returning mock search results', {
       component: 'SearchTool',
       operation: 'mock_search',
       query: parameters.query,
-      limit: parameters.limit
+      limit: parameters.limit,
     });
 
     const mockResults: SearchResult[] = [
