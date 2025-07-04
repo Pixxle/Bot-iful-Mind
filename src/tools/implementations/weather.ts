@@ -27,7 +27,7 @@ export class WeatherTool extends BaseTool {
   async execute(input: ToolInput): Promise<ToolOutput> {
     const logger = requestContext.getLogger();
     const startTime = Date.now();
-    
+
     try {
       const parameters = input.parameters as WeatherParameters;
       this.validateParameters(parameters);
@@ -36,7 +36,7 @@ export class WeatherTool extends BaseTool {
       if (!apiKey) {
         logger.error('Weather API key not configured', undefined, {
           component: 'WeatherTool',
-          operation: 'api_key_check'
+          operation: 'api_key_check',
         });
         return this.createErrorResponse('Weather API key not configured');
       }
@@ -55,13 +55,25 @@ export class WeatherTool extends BaseTool {
         location: parameters.location,
         units: parameters.units,
         apiKeyLength: apiKey.length,
-        apiKeyPrefix: apiKey.substring(0, 8) + '...'
+        apiKeyPrefix: apiKey.substring(0, 8) + '...',
       });
 
       const response = await axios.get(url, {
         params: requestParams,
-        timeout: 10000
+        timeout: 10000,
       });
+
+      // Debug log full API response in development mode
+      if (process.env.NODE_ENV !== 'production') {
+        logger.debug('OpenWeatherMap API full response', {
+          component: 'WeatherTool',
+          operation: 'api_response_debug',
+          responseData: response.data,
+          responseStatus: response.status,
+          responseHeaders: response.headers,
+          location: parameters.location,
+        });
+      }
 
       const data = response.data as {
         main: { temp: number; humidity: number };
@@ -84,18 +96,18 @@ export class WeatherTool extends BaseTool {
         operation: 'api_success',
         duration,
         location: weatherData.location,
-        temperature: weatherData.temperature
+        temperature: weatherData.temperature,
       });
 
       return this.createSuccessResponse(weatherData);
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         const statusText = error.response?.statusText;
         const responseData = error.response?.data as unknown;
-        
+
         logger.error('OpenWeatherMap API error', error, {
           component: 'WeatherTool',
           operation: 'api_error',
@@ -105,23 +117,33 @@ export class WeatherTool extends BaseTool {
           responseData,
           location: (input.parameters as WeatherParameters | undefined)?.location,
           errorCode: error.code,
-          errorMessage: error.message
+          errorMessage: error.message,
         });
 
         // Provide specific error messages based on status code
         switch (status) {
           case 401:
-            return this.createErrorResponse('Invalid weather API key. Please check your configuration.');
+            return this.createErrorResponse(
+              'Invalid weather API key. Please check your configuration.'
+            );
           case 404:
-            return this.createErrorResponse(`Location "${(input.parameters as WeatherParameters | undefined)?.location}" not found. Please try a different city name.`);
+            return this.createErrorResponse(
+              `Location "${(input.parameters as WeatherParameters | undefined)?.location}" not found. Please try a different city name.`
+            );
           case 429:
-            return this.createErrorResponse('Weather API rate limit exceeded. Please try again later.');
+            return this.createErrorResponse(
+              'Weather API rate limit exceeded. Please try again later.'
+            );
           case 500:
           case 502:
           case 503:
-            return this.createErrorResponse('Weather service is temporarily unavailable. Please try again later.');
+            return this.createErrorResponse(
+              'Weather service is temporarily unavailable. Please try again later.'
+            );
           default:
-            return this.createErrorResponse(`Weather API error: ${statusText || 'Unknown error'} (${status || 'No status'})`);
+            return this.createErrorResponse(
+              `Weather API error: ${statusText || 'Unknown error'} (${status || 'No status'})`
+            );
         }
       } else {
         // Network or other errors
@@ -129,18 +151,20 @@ export class WeatherTool extends BaseTool {
           component: 'WeatherTool',
           operation: 'network_error',
           duration,
-          location: input.parameters?.location
+          location: input.parameters?.location,
         });
-        
+
         if (error instanceof Error) {
           if (error.message.includes('timeout')) {
             return this.createErrorResponse('Weather request timed out. Please try again.');
           }
           if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
-            return this.createErrorResponse('Unable to connect to weather service. Please check your internet connection.');
+            return this.createErrorResponse(
+              'Unable to connect to weather service. Please check your internet connection.'
+            );
           }
         }
-        
+
         return this.createErrorResponse('Failed to fetch weather data due to a network error.');
       }
     }

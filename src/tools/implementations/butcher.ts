@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { BaseTool } from '../base';
 import { ToolInput, ToolOutput } from '../../types';
+import { requestContext } from '../../utils/requestContext';
 
 const ButcherParametersSchema = z.object({});
 
@@ -16,7 +17,7 @@ interface ButcherData {
 
 export class ButcherTool extends BaseTool {
   name = 'butcher';
-  description = 'Get the progress of Jim Butcher\'s latest book';
+  description = "Get the progress of Jim Butcher's latest book";
   protected parametersSchema = ButcherParametersSchema;
 
   async execute(input: ToolInput): Promise<ToolOutput> {
@@ -26,23 +27,39 @@ export class ButcherTool extends BaseTool {
 
       const response = await axios.get('https://www.jim-butcher.com/', {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         },
-        timeout: 10000
+        timeout: 10000,
       });
 
+      // Debug log full API response in development mode
+      if (process.env.NODE_ENV !== 'production') {
+        const logger = requestContext.getLogger();
+        logger.debug('Jim Butcher website full response', {
+          component: 'ButcherTool',
+          operation: 'api_response_debug',
+          responseData: response.data,
+          responseStatus: response.status,
+          responseHeaders: response.headers,
+          url: 'https://www.jim-butcher.com/',
+        });
+      }
+
       const $ = cheerio.load(response.data as string);
-      
+
       // Find the progress percentage
       const progressElement = $('.wpsm_progress-value');
       const progressText = progressElement.text().trim();
-      
+
       // Find the book title
       const titleElement = $('.wpsm_progress-title');
       const fullTitle = titleElement.clone().children().remove().end().text().trim();
-      
+
       if (!progressText || !fullTitle) {
-        return this.createErrorResponse('Could not find progress information on Jim Butcher\'s website');
+        return this.createErrorResponse(
+          "Could not find progress information on Jim Butcher's website"
+        );
       }
 
       // Extract book name from title (remove "Compiling..." part)
@@ -54,22 +71,22 @@ export class ButcherTool extends BaseTool {
       const butcherData: ButcherData = {
         bookName,
         progress: progressText,
-        fullTitle
+        fullTitle,
       };
 
       return this.createSuccessResponse(butcherData);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 404) {
-          return this.createErrorResponse('Jim Butcher\'s website is not accessible');
+          return this.createErrorResponse("Jim Butcher's website is not accessible");
         }
         if (error.code === 'ECONNABORTED') {
-          return this.createErrorResponse('Request timed out while fetching Jim Butcher\'s website');
+          return this.createErrorResponse("Request timed out while fetching Jim Butcher's website");
         }
       }
 
       // Error logging is handled by the base tool class
-      return this.createErrorResponse('Failed to fetch book progress from Jim Butcher\'s website');
+      return this.createErrorResponse("Failed to fetch book progress from Jim Butcher's website");
     }
   }
 }

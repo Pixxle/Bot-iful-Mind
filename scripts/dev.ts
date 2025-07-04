@@ -5,6 +5,9 @@ import { TelegramBot } from '../src/bot/telegram';
 
 config();
 
+// Ensure we're in development mode for debug logging
+process.env.NODE_ENV = 'development';
+
 let ngrokProcess: ChildProcess | null = null;
 let bot: TelegramBot | null = null;
 

@@ -68,6 +68,18 @@ export class SearchTool extends BaseTool {
         timeout: 10000,
       });
 
+      // Debug log full API response in development mode
+      if (process.env.NODE_ENV !== 'production') {
+        logger.debug('Google Custom Search API full response', {
+          component: 'SearchTool',
+          operation: 'api_response_debug',
+          responseData: response.data,
+          responseStatus: response.status,
+          responseHeaders: response.headers,
+          query: parameters.query
+        });
+      }
+
       interface GoogleSearchItem {
         title: string;
         snippet: string;
