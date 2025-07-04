@@ -86,22 +86,44 @@ export class LLMClient {
       })
       .join('\n');
 
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentDayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+    
     const systemPrompt = `You are a tool router for a Telegram bot. Analyze the user's message and determine if any of the available tools should be used to answer their query.
+
+Current date: ${currentDate} (${currentDayName})
 
 Available tools:
 ${toolDescriptions}
 
 IMPORTANT: 
 - For weather tool, you MUST extract the location from the user's message and include it in toolParameters
+- For weather tool, extract date information if provided and CONVERT IT TO YYYY-MM-DD format before passing to tools
 - If the user asks about weather but doesn't specify a location, ask them to provide one
 - For butcher tool, use it when users ask about Jim Butcher's book progress, latest book, or writing status
 - Extract all required parameters from the user's message
+
+DATE CONVERSION RULES:
+- "today" → "${currentDate}"
+- "tomorrow" → "${new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}"
+- For day names like "monday", "tuesday", etc. → convert to the NEXT occurrence of that day in YYYY-MM-DD format
+- For "next [day]" like "next wednesday" → convert to the next occurrence of that specific day in YYYY-MM-DD format
+- For absolute dates already in YYYY-MM-DD format → keep as-is
+
+Examples with current date ${currentDate} (${currentDayName}):
+- "weather tomorrow in Paris" → {"location": "Paris", "date": "${new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}", "units": "metric"}
+- "weather in London" → {"location": "London", "units": "metric"}
+- "weather next wednesday in Tokyo" → {"location": "Tokyo", "date": "[YYYY-MM-DD for next Wednesday]", "units": "metric"}
+- "weather monday in Berlin" → {"location": "Berlin", "date": "[YYYY-MM-DD for next Monday]", "units": "metric"}
+
+CRITICAL: Always convert relative dates to YYYY-MM-DD format. Never pass relative date strings like "tomorrow", "next wednesday", etc. to tools.
 
 Respond in JSON format:
 {
   "shouldUseTool": boolean,
   "toolName": "tool name if applicable",
-  "toolParameters": { "location": "extracted location", "units": "metric" },
+  "toolParameters": { "location": "extracted location", "date": "YYYY-MM-DD format if date specified", "units": "metric" },
   "response": "direct response if no tool is needed"
 }`;
 
