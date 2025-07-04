@@ -61,45 +61,64 @@ Edit `.env` with your credentials:
 
 ### 3. Local Development
 
-Start local DynamoDB:
+#### Prerequisites
+
+- Install [ngrok](https://ngrok.com/download) for creating secure tunnels to localhost
+- Docker for running local DynamoDB
+
+#### Setup Steps
+
+1. **Start local DynamoDB:**
 
 ```bash
 docker-compose up -d
 ```
 
-Initialize local database:
+2. **Initialize local database:**
 
 ```bash
 npm run setup
 ```
 
-Run development server:
+3. **Start development environment:**
 
 ```bash
 npm run dev
 ```
 
-### 4. Deploy to Vercel
+The development script will automatically:
 
-Install Vercel CLI:
+- Start an ngrok tunnel to expose your local server
+- Set the Telegram webhook to the tunnel URL
+- Start the bot in webhook mode
+- Handle cleanup when you stop the process (Ctrl+C)
 
-```bash
-npm i -g vercel
+#### Development Environment Output
+
+When successful, you'll see:
+
+```
+🚀 Starting local development environment...
+
+Starting ngrok tunnel...
+✅ ngrok tunnel created: https://abc123.ngrok.io
+✅ Webhook set to: https://abc123.ngrok.io/api/webhook
+Starting bot in webhook mode...
+✅ Bot started successfully
+
+✅ Development environment ready!
+📝 Your bot is now running in webhook mode
+🌐 Tunnel URL: https://abc123.ngrok.io
+🔗 Webhook URL: https://abc123.ngrok.io/api/webhook
+
+Press Ctrl+C to stop the development server
 ```
 
-Deploy:
+#### Troubleshooting
 
-```bash
-vercel
-```
-
-Set webhook URL:
-
-```bash
-curl -X POST https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://your-deployment.vercel.app/api/webhook"}'
-```
+- **ngrok not found**: Install ngrok from https://ngrok.com/download
+- **Port 3000 in use**: Change the port in `scripts/dev.ts` or stop the conflicting process
+- **Webhook fails**: Check your `TELEGRAM_BOT_TOKEN` in `.env`
 
 ## Development
 

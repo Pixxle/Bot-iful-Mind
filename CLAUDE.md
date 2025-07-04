@@ -22,9 +22,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Local Development Setup
 
-1. Run `docker-compose up -d` to start local DynamoDB
-2. Run `npm run setup` to initialize database tables
-3. Run `npm run dev` to start development server with tunnel
+**Prerequisites**: Install [ngrok](https://ngrok.com/download) for creating secure tunnels to localhost
+
+**Development Flow**:
+1. `docker-compose up -d` - Start local DynamoDB
+2. `npm run setup` - Initialize database tables  
+3. `npm run dev` - Start comprehensive development environment
+
+The `npm run dev` command automatically:
+- Starts ngrok tunnel on port 3000
+- Sets Telegram webhook to tunnel URL
+- Starts bot in webhook mode
+- Handles cleanup on exit (Ctrl+C)
+
+**Output**: Shows tunnel URL, webhook URL, and bot status
+**Cleanup**: Automatic webhook clearing and ngrok shutdown
 
 ## Architecture Overview
 
