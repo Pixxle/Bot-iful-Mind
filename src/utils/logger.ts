@@ -128,6 +128,43 @@ class Logger {
     });
   }
 
+  logLLMInput(model: string, systemPrompt?: string, userPrompt?: string, context?: LogContext): void {
+    // Helper function to sanitize content for logging
+    const sanitizeContent = (content: string, maxLength: number = 1000): string => {
+      if (content.length <= maxLength) return content;
+      return content.substring(0, maxLength) + `... (truncated from ${content.length} chars)`;
+    };
+
+    this.debug('LLM input details', {
+      ...context,
+      component: 'LLM',
+      operation: 'input',
+      model,
+      systemPrompt: systemPrompt ? sanitizeContent(systemPrompt) : undefined,
+      userPrompt: userPrompt ? sanitizeContent(userPrompt) : undefined,
+      systemPromptLength: systemPrompt?.length || 0,
+      userPromptLength: userPrompt?.length || 0,
+    });
+  }
+
+  logLLMResponse(model: string, response: string, finishReason?: string, context?: LogContext): void {
+    // Helper function to sanitize response content
+    const sanitizeContent = (content: string, maxLength: number = 1000): string => {
+      if (content.length <= maxLength) return content;
+      return content.substring(0, maxLength) + `... (truncated from ${content.length} chars)`;
+    };
+
+    this.debug('LLM response details', {
+      ...context,
+      component: 'LLM',
+      operation: 'response',
+      model,
+      response: sanitizeContent(response),
+      responseLength: response.length,
+      finishReason,
+    });
+  }
+
   logDatabaseOperation(operation: string, table: string, duration: number, success: boolean, context?: LogContext): void {
     this.info(`Database ${operation} ${success ? 'completed' : 'failed'}`, {
       ...context,
@@ -204,6 +241,14 @@ class ChildLogger {
 
   logLLMCall(model: string, promptTokens: number, completionTokens: number, duration: number, additionalContext?: LogContext): void {
     this.parent.logLLMCall(model, promptTokens, completionTokens, duration, { ...this.context, ...additionalContext });
+  }
+
+  logLLMInput(model: string, systemPrompt?: string, userPrompt?: string, additionalContext?: LogContext): void {
+    this.parent.logLLMInput(model, systemPrompt, userPrompt, { ...this.context, ...additionalContext });
+  }
+
+  logLLMResponse(model: string, response: string, finishReason?: string, additionalContext?: LogContext): void {
+    this.parent.logLLMResponse(model, response, finishReason, { ...this.context, ...additionalContext });
   }
 
   logDatabaseOperation(operation: string, table: string, duration: number, success: boolean, additionalContext?: LogContext): void {

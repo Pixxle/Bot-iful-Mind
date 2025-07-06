@@ -34,6 +34,11 @@ export class LLMClient {
       userPromptLength: prompt.length,
     });
 
+    // Debug logging for LLM input
+    if (process.env.NODE_ENV !== 'production') {
+      logger.logLLMInput(model, systemPrompt, prompt);
+    }
+
     try {
       const completion = await this.openai.chat.completions.create({
         model,
@@ -52,6 +57,11 @@ export class LLMClient {
         finishReason: completion.choices[0]?.finish_reason,
         responseLength: response.length,
       });
+
+      // Debug logging for LLM response
+      if (process.env.NODE_ENV !== 'production') {
+        logger.logLLMResponse(model, response, completion.choices[0]?.finish_reason);
+      }
 
       return response;
     } catch (error) {
@@ -136,8 +146,25 @@ Respond in JSON format:
       tools: availableTools.map((t) => t.name),
     });
 
+    // Debug logging for tool analysis input
+    if (process.env.NODE_ENV !== 'production') {
+      logger.logLLMInput('tool-analysis', systemPrompt, message, {
+        toolCount: availableTools.length,
+        toolNames: availableTools.map((t) => t.name),
+      });
+    }
+
     try {
       const response = await this.complete(message, systemPrompt);
+      
+      // Debug logging for raw LLM response
+      if (process.env.NODE_ENV !== 'production') {
+        logger.logLLMResponse('tool-analysis', response, undefined, {
+          toolCount: availableTools.length,
+          rawResponseLength: response.length,
+        });
+      }
+      
       // Clean response by removing markdown code blocks
       const cleanedResponse = response
         .replace(/```json\n?/g, '')
@@ -145,6 +172,17 @@ Respond in JSON format:
         .trim();
 
       const parsed = JSON.parse(cleanedResponse) as LLMResponse;
+
+      // Debug logging for parsed tool analysis result
+      logger.debug('Tool analysis result parsed', {
+        component: 'LLM',
+        operation: 'tool_analysis_parsed',
+        shouldUseTool: parsed.shouldUseTool,
+        selectedTool: parsed.toolName,
+        hasParameters: !!parsed.toolParameters,
+        cleanedResponseLength: cleanedResponse.length,
+        parameterKeys: parsed.toolParameters ? Object.keys(parsed.toolParameters) : [],
+      });
 
       logger.info('Tool analysis completed', {
         component: 'LLM',
