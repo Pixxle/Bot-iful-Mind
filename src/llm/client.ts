@@ -14,8 +14,8 @@ export class LLMClient {
   async complete(prompt: string, systemPrompt?: string): Promise<string> {
     const logger = requestContext.getLogger();
     const startTime = Date.now();
-    const model = 'gpt-4-turbo-preview';
-    
+    const model = 'gpt-4.1-nano';
+
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
     if (systemPrompt) {
       messages.push({ role: 'system', content: systemPrompt });
@@ -24,14 +24,14 @@ export class LLMClient {
 
     // Estimate token counts (rough approximation)
     const promptTokens = Math.ceil((systemPrompt || '').length / 4) + Math.ceil(prompt.length / 4);
-    
+
     logger.info('LLM completion started', {
       component: 'LLM',
       operation: 'completion_start',
       model,
       estimatedPromptTokens: promptTokens,
       systemPromptLength: systemPrompt?.length || 0,
-      userPromptLength: prompt.length
+      userPromptLength: prompt.length,
     });
 
     try {
@@ -39,24 +39,19 @@ export class LLMClient {
         model,
         messages,
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 4096,
       });
 
       const duration = Date.now() - startTime;
       const response = completion.choices[0]?.message?.content || '';
       const actualPromptTokens = completion.usage?.prompt_tokens || promptTokens;
-      const completionTokens = completion.usage?.completion_tokens || Math.ceil(response.length / 4);
+      const completionTokens =
+        completion.usage?.completion_tokens || Math.ceil(response.length / 4);
 
-      logger.logLLMCall(
-        model,
-        actualPromptTokens,
-        completionTokens,
-        duration,
-        {
-          finishReason: completion.choices[0]?.finish_reason,
-          responseLength: response.length
-        }
-      );
+      logger.logLLMCall(model, actualPromptTokens, completionTokens, duration, {
+        finishReason: completion.choices[0]?.finish_reason,
+        responseLength: response.length,
+      });
 
       return response;
     } catch (error) {
@@ -66,7 +61,7 @@ export class LLMClient {
         operation: 'completion_error',
         model,
         duration,
-        estimatedPromptTokens: promptTokens
+        estimatedPromptTokens: promptTokens,
       });
       throw new Error('Failed to get LLM response');
     }
@@ -74,7 +69,11 @@ export class LLMClient {
 
   async analyzeForToolUse(
     message: string,
-    availableTools: Array<{ name: string; description: string; parameters?: Record<string, unknown> }>
+    availableTools: Array<{
+      name: string;
+      description: string;
+      parameters?: Record<string, unknown>;
+    }>
   ): Promise<LLMResponse> {
     const toolDescriptions = availableTools
       .map((t) => {
@@ -89,7 +88,7 @@ export class LLMClient {
     const now = new Date();
     const currentDate = now.toISOString().split('T')[0];
     const currentDayName = now.toLocaleDateString('en-US', { weekday: 'long' });
-    
+
     const systemPrompt = `You are a tool router for a Telegram bot. Analyze the user's message and determine if any of the available tools should be used to answer their query.
 
 Current date: ${currentDate} (${currentDayName})
@@ -128,13 +127,13 @@ Respond in JSON format:
 }`;
 
     const logger = requestContext.getLogger();
-    
+
     logger.info('Tool analysis started', {
       component: 'LLM',
       operation: 'tool_analysis',
       messageLength: message.length,
       availableToolsCount: availableTools.length,
-      tools: availableTools.map(t => t.name)
+      tools: availableTools.map((t) => t.name),
     });
 
     try {
@@ -144,24 +143,24 @@ Respond in JSON format:
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
         .trim();
-      
+
       const parsed = JSON.parse(cleanedResponse) as LLMResponse;
-      
+
       logger.info('Tool analysis completed', {
         component: 'LLM',
         operation: 'tool_analysis_complete',
         shouldUseTool: parsed.shouldUseTool,
         selectedTool: parsed.toolName,
         hasParameters: !!parsed.toolParameters,
-        responseLength: parsed.response?.length || 0
+        responseLength: parsed.response?.length || 0,
       });
-      
+
       return parsed;
     } catch (error) {
       logger.error('Error analyzing for tool use', error as Error, {
         component: 'LLM',
         operation: 'tool_analysis_error',
-        messageLength: message.length
+        messageLength: message.length,
       });
       return {
         shouldUseTool: false,
